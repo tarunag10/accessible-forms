@@ -76,6 +76,56 @@ export function filterForms(forms, filters = {}) {
   });
 }
 
+export function safeFormFilename(title = 'form-spec') {
+  const slug = String(title)
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '')
+    .slice(0, 80);
+
+  return `${slug || 'form-spec'}.json`;
+}
+
+export function createFormExport(form) {
+  const spec = {
+    schemaVersion: 'open-access-uk.form.v1',
+    title: form.title,
+    description: form.description,
+    topic: form.topic,
+    complexity: form.complexity,
+    fields: (form.fields || []).map((field) => ({ ...field }))
+  };
+
+  return {
+    filename: safeFormFilename(form.title),
+    spec,
+    json: `${JSON.stringify(spec, null, 2)}\n`
+  };
+}
+
+export function serializeSavedNotes(notes = {}) {
+  const safeNotes = Object.fromEntries(
+    Object.entries(notes)
+      .filter(([, value]) => typeof value === 'string' && value.trim())
+      .map(([key, value]) => [key, value.trim()])
+  );
+
+  return JSON.stringify(safeNotes);
+}
+
+export function parseSavedNotes(value) {
+  try {
+    const parsed = JSON.parse(value || '{}');
+    if (!parsed || Array.isArray(parsed) || typeof parsed !== 'object') return {};
+
+    return Object.fromEntries(
+      Object.entries(parsed).filter(([, note]) => typeof note === 'string' && note.trim())
+    );
+  } catch {
+    return {};
+  }
+}
+
 export const exampleForms = [
   {
     title: 'Council housing repair request',

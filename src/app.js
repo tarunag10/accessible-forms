@@ -1,7 +1,16 @@
-import { assessFormReadiness, exampleForms, filterForms } from './forms.js';
+import {
+  assessFormReadiness,
+  createFormExport,
+  exampleForms,
+  filterForms,
+  parseSavedNotes,
+  serializeSavedNotes
+} from './forms.js';
 
 const mount = document.querySelector('#forms');
 const filtersMount = document.querySelector('#form-filters');
+const notesStorageKey = 'open-access-uk.form-review-notes';
+let savedNotes = loadSavedNotes();
 
 function escapeHtml(value = '') {
   return value.replace(/[&<>"']/g, (char) => ({
@@ -50,6 +59,7 @@ function renderField(field) {
 
 function renderForm(form) {
   const readiness = assessFormReadiness(form);
+  const noteId = `notes-${form.title.toLowerCase().replace(/[^a-z0-9]+/g, '-')}`;
   return `<article class="card form-card">
     <div class="card-header">
       <div>
@@ -66,6 +76,14 @@ function renderForm(form) {
       ${form.fields.map(renderField).join('')}
       <button type="button">Preview local submission</button>
     </form>
+    <div class="export-actions" aria-label="Export ${escapeHtml(form.title)} spec">
+      <button type="button" class="secondary copy-spec" data-form-title="${escapeHtml(form.title)}">Copy spec</button>
+      <button type="button" class="secondary download-spec" data-form-title="${escapeHtml(form.title)}">Download JSON</button>
+    </div>
+    <div class="review-notes">
+      <label for="${noteId}">Review notes</label>
+      <textarea id="${noteId}" data-note-title="${escapeHtml(form.title)}" placeholder="Add local notes before reusing this form.">${escapeHtml(savedNotes[form.title] || '')}</textarea>
+    </div>
     <details>
       <summary>Readiness checklist and issues</summary>
       <ul>
@@ -74,6 +92,52 @@ function renderForm(form) {
       ${readiness.issues.length ? `<h3>Issues to fix</h3><ul>${readiness.issues.map((issue) => `<li>${escapeHtml(issue)}</li>`).join('')}</ul>` : '<p>Visible labels, hints, errors, and grouped-control semantics are present.</p>'}
     </details>
   </article>`;
+}
+
+function loadSavedNotes() {
+  try {
+    return parseSavedNotes(localStorage.getItem(notesStorageKey));
+  } catch {
+    return {};
+  }
+}
+
+function saveNotes() {
+  try {
+    localStorage.setItem(notesStorageKey, serializeSavedNotes(savedNotes));
+  } catch {
+    // Local notes are best-effort when private browsing or storage policy blocks writes.
+  }
+}
+
+function findForm(title) {
+  return exampleForms.find((form) => form.title === title);
+}
+
+function downloadJson(filename, json) {
+  const url = URL.createObjectURL(new Blob([json], { type: 'application/json' }));
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = filename;
+  link.click();
+  URL.revokeObjectURL(url);
+}
+
+async function copyText(value) {
+  if (navigator.clipboard?.writeText) {
+    await navigator.clipboard.writeText(value);
+    return;
+  }
+
+  const field = document.createElement('textarea');
+  field.value = value;
+  field.setAttribute('readonly', '');
+  field.style.position = 'fixed';
+  field.style.left = '-9999px';
+  document.body.append(field);
+  field.select();
+  document.execCommand('copy');
+  field.remove();
 }
 
 function renderFilters() {
@@ -104,3 +168,28 @@ function renderForms() {
 renderFilters();
 renderForms();
 filtersMount.addEventListener('change', renderForms);
+mount.addEventListener('input', (event) => {
+  const notesField = event.target.closest('[data-note-title]');
+  if (!notesField) return;
+
+  savedNotes = { ...savedNotes, [notesField.dataset.noteTitle]: notesField.value };
+  saveNotes();
+});
+
+mount.addEventListener('click', async (event) => {
+  const copyButton = event.target.closest('.copy-spec');
+  const downloadButton = event.target.closest('.download-spec');
+  const button = copyButton || downloadButton;
+  if (!button) return;
+
+  const form = findForm(button.dataset.formTitle);
+  if (!form) return;
+
+  const exported = createFormExport(form);
+  if (copyButton) {
+    await copyText(exported.json);
+    copyButton.textContent = 'Copied';
+  } else {
+    downloadJson(exported.filename, exported.json);
+  }
+});

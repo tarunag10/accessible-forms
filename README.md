@@ -27,6 +27,13 @@ The first feature slice also adds:
 - `filterForms(forms, { topic, complexity })`: filters static form specs by public-service topic and complexity
 - demo filters for topic and complexity, with per-form readiness issues shown in expandable details
 
+The second feature slice adds:
+
+- `createFormExport(form)`: returns a reusable JSON form schema, safe filename, and formatted JSON string
+- `safeFormFilename(title)`: creates download-safe `.json` filenames from form titles
+- `serializeSavedNotes(notes)` and `parseSavedNotes(value)`: localStorage-safe review note helpers
+- per-form `Copy spec`, `Download JSON`, and local review note controls in the static demo
+
 ## Demo
 
 Open `index.html` in a browser. This repository is intentionally no-backend and keeps user data local to the browser.

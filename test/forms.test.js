@@ -2,8 +2,12 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {
   assessFormReadiness,
+  createFormExport,
   exampleForms,
   filterForms,
+  parseSavedNotes,
+  safeFormFilename,
+  serializeSavedNotes,
   validateFormSpec
 } from '../src/forms.js';
 
@@ -69,4 +73,33 @@ test('filters forms by topic and complexity', () => {
     'Exam adjustment request'
   ]);
   assert.equal(filterForms(exampleForms, { topic: 'benefits', complexity: 'standard' })[0].title, 'Benefits evidence upload');
+});
+
+test('creates selected form schema exports with safe filenames', () => {
+  const form = exampleForms.find((item) => item.title === 'Benefits evidence upload');
+  const exported = createFormExport(form);
+
+  assert.equal(safeFormFilename('Benefits evidence upload / trial?'), 'benefits-evidence-upload-trial.json');
+  assert.equal(exported.filename, 'benefits-evidence-upload.json');
+  assert.equal(exported.spec.title, 'Benefits evidence upload');
+  assert.equal(exported.spec.schemaVersion, 'open-access-uk.form.v1');
+  assert.deepEqual(exported.spec.fields.map((field) => field.id), ['claim-reference', 'evidence-type', 'evidence-file']);
+  assert.equal(JSON.parse(exported.json).title, 'Benefits evidence upload');
+});
+
+test('serializes saved review notes safely for localStorage', () => {
+  const saved = serializeSavedNotes({
+    'Benefits evidence upload': 'Check file-size policy before reuse.',
+    'Council housing repair request': 42,
+    blank: '   '
+  });
+
+  assert.deepEqual(JSON.parse(saved), {
+    'Benefits evidence upload': 'Check file-size policy before reuse.'
+  });
+  assert.deepEqual(parseSavedNotes(saved), {
+    'Benefits evidence upload': 'Check file-size policy before reuse.'
+  });
+  assert.deepEqual(parseSavedNotes('{broken'), {});
+  assert.deepEqual(parseSavedNotes('[]'), {});
 });
