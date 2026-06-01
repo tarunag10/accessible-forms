@@ -47,6 +47,27 @@ const readinessChecks = [
   }
 ];
 
+export const currentGuidance = [
+  {
+    title: 'WCAG 2.2 AA is the public-sector benchmark',
+    detail: 'GOV.UK accessibility guidance says public sector websites and apps should meet WCAG 2.2 level AA unless a valid exception applies, and publish an accessibility statement.',
+    source: 'GOV.UK accessibility requirements',
+    url: 'https://www.gov.uk/guidance/accessibility-requirements-for-public-sector-websites-and-apps'
+  },
+  {
+    title: 'Errors need a page-level summary and field-level messages',
+    detail: 'The GOV.UK Design System error summary pattern says to show an error summary at the top of the page and an error message next to each affected answer.',
+    source: 'GOV.UK Design System error summary',
+    url: 'https://design-system.service.gov.uk/components/error-summary/'
+  },
+  {
+    title: 'Accessible formats should not be online-only',
+    detail: 'Government inclusive communication guidance notes that online-only information can exclude people, and alternative formats such as Easy Read, large print, audio and Braille may be needed.',
+    source: 'GOV.UK accessible communication formats',
+    url: 'https://www.gov.uk/government/publications/inclusive-communication/accessible-communication-formats/'
+  }
+];
+
 export function assessFormReadiness(form) {
   const validation = validateFormSpec(form);
   const checklist = readinessChecks.map((check) => ({
@@ -258,6 +279,10 @@ export function createFormImplementationPack(form = {}) {
       '- [ ] Confirm visible labels, hints, and required-field error recovery.',
       '- [ ] Check grouped radio and checkbox controls with a screen reader.',
       '- [ ] Save evidence of contrast, focus, and validation checks.',
+      '- [ ] Check against current WCAG 2.2 AA and public-sector accessibility statement expectations where applicable.',
+      '',
+      '## Current source notes',
+      ...currentGuidance.map((item) => `- ${item.title}: ${item.detail} Source: ${item.url}`),
       '',
       '## JSON form spec',
       '```json',

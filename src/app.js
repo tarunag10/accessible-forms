@@ -3,6 +3,7 @@ import {
   createFormExport,
   createFormImplementationPack,
   createRemediationReport,
+  currentGuidance,
   exampleForms,
   filterForms,
   parseSavedNotes,
@@ -11,6 +12,7 @@ import {
 
 const mount = document.querySelector('#forms');
 const filtersMount = document.querySelector('#form-filters');
+const currentGuidanceMount = document.querySelector('#current-guidance');
 const notesStorageKey = 'open-access-uk.form-review-notes';
 let savedNotes = loadSavedNotes();
 
@@ -179,8 +181,18 @@ function renderForms() {
     : '<p class="panel">No forms match these filters.</p>';
 }
 
+function renderCurrentGuidance() {
+  if (!currentGuidanceMount) return;
+  currentGuidanceMount.innerHTML = currentGuidance.map((item) => `<article class="card">
+    <h3>${escapeHtml(item.title)}</h3>
+    <p>${escapeHtml(item.detail)}</p>
+    <a href="${escapeHtml(item.url)}" rel="noreferrer">${escapeHtml(item.source)}</a>
+  </article>`).join('');
+}
+
 renderFilters();
 renderForms();
+renderCurrentGuidance();
 filtersMount.addEventListener('change', renderForms);
 mount.addEventListener('input', (event) => {
   const notesField = event.target.closest('[data-note-title]');

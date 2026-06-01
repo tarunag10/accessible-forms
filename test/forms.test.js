@@ -4,6 +4,7 @@ import {
   assessFormReadiness,
   createFormImplementationPack,
   createFormExport,
+  currentGuidance,
   exampleForms,
   filterForms,
   parseSavedNotes,
@@ -154,6 +155,15 @@ test('creates form implementation packs with spec, remediation, and QA checks', 
   assert.match(pack.markdown, /## Remediation report/);
   assert.match(pack.markdown, /## Implementation QA/);
   assert.match(pack.markdown, /keyboard-only completion/);
+  assert.match(pack.markdown, /WCAG 2\.2 AA/);
+  assert.match(pack.markdown, /Current source notes/);
   assert.match(pack.markdown, /```json/);
   assert.match(pack.markdown, /"schemaVersion": "open-access-uk.form.v1"/);
+});
+
+test('exposes current form accessibility guidance sources', () => {
+  assert.equal(currentGuidance.length, 3);
+  assert.ok(currentGuidance.some((item) => item.detail.includes('WCAG 2.2')));
+  assert.ok(currentGuidance.some((item) => item.title.includes('Errors')));
+  assert.ok(currentGuidance.every((item) => item.url.startsWith('https://')));
 });
