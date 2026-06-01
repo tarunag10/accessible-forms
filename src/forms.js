@@ -235,6 +235,38 @@ export function createFormExport(form) {
   };
 }
 
+export function createFormImplementationPack(form = {}) {
+  const exported = createFormExport(form);
+  const remediation = createRemediationReport(form);
+
+  return {
+    title: `${form.title || 'Form'} implementation pack`,
+    markdown: [
+      `# ${form.title || 'Form'} implementation pack`,
+      '',
+      'Generated locally in the browser. Nothing was sent to a server.',
+      '',
+      '## Readiness',
+      `Score: ${remediation.readiness.score}%`,
+      `Status: ${remediation.readiness.status}`,
+      '',
+      '## Remediation report',
+      remediation.markdown.trim(),
+      '',
+      '## Implementation QA',
+      '- [ ] Test keyboard-only completion.',
+      '- [ ] Confirm visible labels, hints, and required-field error recovery.',
+      '- [ ] Check grouped radio and checkbox controls with a screen reader.',
+      '- [ ] Save evidence of contrast, focus, and validation checks.',
+      '',
+      '## JSON form spec',
+      '```json',
+      exported.json.trim(),
+      '```'
+    ].join('\n')
+  };
+}
+
 export function serializeSavedNotes(notes = {}) {
   const safeNotes = Object.fromEntries(
     Object.entries(notes)

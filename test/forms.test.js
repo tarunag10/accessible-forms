@@ -2,6 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {
   assessFormReadiness,
+  createFormImplementationPack,
   createFormExport,
   exampleForms,
   filterForms,
@@ -142,4 +143,17 @@ test('formats remediation reports as copyable markdown and plain text', () => {
   assert.ok(report.plain.includes('Callback request remediation report'));
   assert.ok(report.plain.includes('Critical'));
   assert.ok(report.plain.includes('Validation'));
+});
+
+test('creates form implementation packs with spec, remediation, and QA checks', () => {
+  const form = exampleForms.find((item) => item.title === 'Benefits evidence upload');
+  const pack = createFormImplementationPack(form);
+
+  assert.equal(pack.title, 'Benefits evidence upload implementation pack');
+  assert.match(pack.markdown, /^# Benefits evidence upload implementation pack/m);
+  assert.match(pack.markdown, /## Remediation report/);
+  assert.match(pack.markdown, /## Implementation QA/);
+  assert.match(pack.markdown, /keyboard-only completion/);
+  assert.match(pack.markdown, /```json/);
+  assert.match(pack.markdown, /"schemaVersion": "open-access-uk.form.v1"/);
 });
