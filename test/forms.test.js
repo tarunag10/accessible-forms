@@ -6,6 +6,7 @@ import {
   exampleForms,
   filterForms,
   parseSavedNotes,
+  createRemediationReport,
   safeFormFilename,
   serializeSavedNotes,
   validateFormSpec
@@ -102,4 +103,43 @@ test('serializes saved review notes safely for localStorage', () => {
   });
   assert.deepEqual(parseSavedNotes('{broken'), {});
   assert.deepEqual(parseSavedNotes('[]'), {});
+});
+
+test('creates prioritized remediation reports grouped by severity and category', () => {
+  const report = createRemediationReport({
+    title: 'Incomplete evidence form',
+    description: 'Collect evidence for a benefit review.',
+    topic: 'benefits',
+    complexity: 'standard',
+    fields: [
+      { id: 'case-ref', label: 'Case reference', type: 'text', required: true },
+      { id: 'evidence', label: 'Upload evidence', type: 'file', required: true, error: 'Upload evidence.' },
+      { id: 'contact', label: 'Contact method', type: 'radio', required: true, error: 'Choose a contact method.' }
+    ]
+  });
+
+  assert.equal(report.title, 'Incomplete evidence form remediation report');
+  assert.equal(report.readiness.score, 40);
+  assert.deepEqual(report.groups.map((group) => group.severity), ['critical', 'warning']);
+  assert.deepEqual(report.groups[0].items.map((item) => item.category), ['Validation', 'Semantics']);
+  assert.ok(report.groups[0].items[0].action.includes('Add clear error text'));
+  assert.ok(report.groups[1].items[0].action.includes('Add hint text'));
+});
+
+test('formats remediation reports as copyable markdown and plain text', () => {
+  const report = createRemediationReport({
+    title: 'Callback request',
+    fields: [
+      { id: 'callback-number', label: 'Phone number', type: 'tel', required: true },
+      { id: 'best-time', label: 'Best time', type: 'checkbox', required: true }
+    ]
+  });
+
+  assert.ok(report.markdown.startsWith('# Callback request remediation report'));
+  assert.ok(report.markdown.includes('## Critical'));
+  assert.ok(report.markdown.includes('- [ ] **Validation**'));
+  assert.ok(report.markdown.includes('Readiness score: 20%'));
+  assert.ok(report.plain.includes('Callback request remediation report'));
+  assert.ok(report.plain.includes('Critical'));
+  assert.ok(report.plain.includes('Validation'));
 });

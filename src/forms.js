@@ -65,6 +65,138 @@ export function assessFormReadiness(form) {
   };
 }
 
+function remediationItemsForField(field = {}) {
+  const name = field.id || field.label || 'unknown field';
+  const items = [];
+
+  if (!field.id || !field.label) {
+    items.push({
+      severity: 'critical',
+      category: 'Labels',
+      action: `Add a stable id and visible label for ${name}.`,
+      evidence: 'WCAG 2.2: labels and instructions; browser autofill and error linking need stable controls.'
+    });
+  }
+
+  if (field.required && !field.error) {
+    items.push({
+      severity: 'critical',
+      category: 'Validation',
+      action: `Add clear error text for ${name} and link it with aria-describedby.`,
+      evidence: 'Required fields need recovery text that names the problem and the expected correction.'
+    });
+  }
+
+  if (complexFieldTypes.has(field.type) && !field.hint) {
+    items.push({
+      severity: 'warning',
+      category: 'Guidance',
+      action: `Add hint text for ${name} explaining format, evidence, or contact expectations.`,
+      evidence: 'Complex inputs are easier to complete when the format and fallback route are available before submission.'
+    });
+  }
+
+  if (groupedFieldTypes.has(field.type) && (!field.fieldset || !field.legend)) {
+    items.push({
+      severity: 'critical',
+      category: 'Semantics',
+      action: `Wrap ${name} in a fieldset with a descriptive legend.`,
+      evidence: 'Grouped radio and checkbox controls need a programmatic question so screen-reader users hear the context.'
+    });
+  }
+
+  return items;
+}
+
+function remediationItemsForForm(form = {}) {
+  const items = (form.fields || []).flatMap(remediationItemsForField);
+
+  if (!form.title || !form.description) {
+    items.push({
+      severity: 'warning',
+      category: 'Plain language',
+      action: 'Add a plain-English title and description before reuse.',
+      evidence: 'Users should understand the service, eligibility, and purpose before they start adding personal data.'
+    });
+  }
+
+  return items;
+}
+
+function severityLabel(severity) {
+  return severity.charAt(0).toUpperCase() + severity.slice(1);
+}
+
+function formatRemediationMarkdown(title, readiness, groups) {
+  const lines = [
+    `# ${title}`,
+    '',
+    `Readiness score: ${readiness.score}% (${readiness.status})`,
+    ''
+  ];
+
+  if (!groups.length) {
+    lines.push('No remediation actions found. Keep evidence of keyboard, screen-reader, and validation checks with the reused form.');
+    return `${lines.join('\n')}\n`;
+  }
+
+  for (const group of groups) {
+    lines.push(`## ${severityLabel(group.severity)}`);
+    for (const item of group.items) {
+      lines.push(`- [ ] **${item.category}**: ${item.action}`);
+      lines.push(`  Evidence: ${item.evidence}`);
+    }
+    lines.push('');
+  }
+
+  return `${lines.join('\n').trimEnd()}\n`;
+}
+
+function formatRemediationPlain(title, readiness, groups) {
+  const lines = [
+    title,
+    `Readiness score: ${readiness.score}% (${readiness.status})`,
+    ''
+  ];
+
+  if (!groups.length) {
+    lines.push('No remediation actions found. Keep evidence of keyboard, screen-reader, and validation checks with the reused form.');
+    return `${lines.join('\n')}\n`;
+  }
+
+  for (const group of groups) {
+    lines.push(severityLabel(group.severity));
+    group.items.forEach((item, index) => {
+      lines.push(`${index + 1}. ${item.category}: ${item.action}`);
+      lines.push(`   Evidence: ${item.evidence}`);
+    });
+    lines.push('');
+  }
+
+  return `${lines.join('\n').trimEnd()}\n`;
+}
+
+export function createRemediationReport(form = {}) {
+  const readiness = assessFormReadiness(form);
+  const severityOrder = ['critical', 'warning'];
+  const title = `${form.title || 'Form'} remediation report`;
+  const items = remediationItemsForForm(form);
+  const groups = severityOrder
+    .map((severity) => ({
+      severity,
+      items: items.filter((item) => item.severity === severity)
+    }))
+    .filter((group) => group.items.length);
+
+  return {
+    title,
+    readiness,
+    groups,
+    markdown: formatRemediationMarkdown(title, readiness, groups),
+    plain: formatRemediationPlain(title, readiness, groups)
+  };
+}
+
 export function filterForms(forms, filters = {}) {
   const topic = filters.topic && filters.topic !== 'all' ? filters.topic : null;
   const complexity = filters.complexity && filters.complexity !== 'all' ? filters.complexity : null;

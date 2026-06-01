@@ -1,6 +1,7 @@
 import {
   assessFormReadiness,
   createFormExport,
+  createRemediationReport,
   exampleForms,
   filterForms,
   parseSavedNotes,
@@ -59,6 +60,7 @@ function renderField(field) {
 
 function renderForm(form) {
   const readiness = assessFormReadiness(form);
+  const remediation = createRemediationReport(form);
   const noteId = `notes-${form.title.toLowerCase().replace(/[^a-z0-9]+/g, '-')}`;
   return `<article class="card form-card">
     <div class="card-header">
@@ -78,6 +80,7 @@ function renderForm(form) {
     </form>
     <div class="export-actions" aria-label="Export ${escapeHtml(form.title)} spec">
       <button type="button" class="secondary copy-spec" data-form-title="${escapeHtml(form.title)}">Copy spec</button>
+      <button type="button" class="secondary copy-report" data-form-title="${escapeHtml(form.title)}">Copy remediation report</button>
       <button type="button" class="secondary download-spec" data-form-title="${escapeHtml(form.title)}">Download JSON</button>
     </div>
     <div class="review-notes">
@@ -90,6 +93,15 @@ function renderForm(form) {
         ${readiness.checklist.map((item) => `<li><strong>${item.passed ? 'Pass' : 'Review'}:</strong> ${escapeHtml(item.label)}</li>`).join('')}
       </ul>
       ${readiness.issues.length ? `<h3>Issues to fix</h3><ul>${readiness.issues.map((issue) => `<li>${escapeHtml(issue)}</li>`).join('')}</ul>` : '<p>Visible labels, hints, errors, and grouped-control semantics are present.</p>'}
+    </details>
+    <details>
+      <summary>Remediation report preview</summary>
+      ${remediation.groups.length ? remediation.groups.map((group) => `<section class="report-group" aria-label="${escapeHtml(group.severity)} remediation actions">
+        <h3>${escapeHtml(group.severity.charAt(0).toUpperCase() + group.severity.slice(1))}</h3>
+        <ul>
+          ${group.items.map((item) => `<li><strong>${escapeHtml(item.category)}:</strong> ${escapeHtml(item.action)} <span class="hint">${escapeHtml(item.evidence)}</span></li>`).join('')}
+        </ul>
+      </section>`).join('') : '<p>No remediation actions found. Keep test evidence with the reused form.</p>'}
     </details>
   </article>`;
 }
@@ -178,8 +190,9 @@ mount.addEventListener('input', (event) => {
 
 mount.addEventListener('click', async (event) => {
   const copyButton = event.target.closest('.copy-spec');
+  const reportButton = event.target.closest('.copy-report');
   const downloadButton = event.target.closest('.download-spec');
-  const button = copyButton || downloadButton;
+  const button = copyButton || reportButton || downloadButton;
   if (!button) return;
 
   const form = findForm(button.dataset.formTitle);
@@ -189,6 +202,9 @@ mount.addEventListener('click', async (event) => {
   if (copyButton) {
     await copyText(exported.json);
     copyButton.textContent = 'Copied';
+  } else if (reportButton) {
+    await copyText(createRemediationReport(form).markdown);
+    reportButton.textContent = 'Copied';
   } else {
     downloadJson(exported.filename, exported.json);
   }
