@@ -292,6 +292,66 @@ export function createFormImplementationPack(form = {}) {
   };
 }
 
+function formatLocalActionPackMarkdown(title, readiness, sections) {
+  const lines = [
+    `# ${title}`,
+    '',
+    'Generated locally in the browser. Nothing was sent to a server.',
+    '',
+    `Readiness: ${readiness.score}% (${readiness.status})`,
+    ''
+  ];
+
+  for (const section of sections) {
+    lines.push(`## ${section.heading}`);
+    section.items.forEach((item) => lines.push(`- [ ] ${item}`));
+    lines.push('');
+  }
+
+  return `${lines.join('\n').trimEnd()}\n`;
+}
+
+export function createLocalActionPack(form = {}, reviewNotes = '') {
+  const remediation = createRemediationReport(form);
+  const readiness = remediation.readiness;
+  const priorityActions = remediation.groups.flatMap((group) => group.items.map((item) => item.action));
+  const notes = typeof reviewNotes === 'string' ? reviewNotes.trim() : '';
+  const beforePublishing = priorityActions.length
+    ? priorityActions.slice(0, 5)
+    : ['Keep the current labels, hints, grouped-control semantics, and error recovery with the reused form.'];
+  const title = `${form.title || 'Form'} local action pack`;
+  const sections = [
+    {
+      heading: 'Before publishing',
+      items: beforePublishing
+    },
+    {
+      heading: 'Local handoff',
+      items: [
+        'Service owner: confirm eligibility wording, offline route, and any regulated-advice boundary.',
+        'Content or design reviewer: check plain-English labels, hint text, and error recovery with a real local scenario.',
+        'Developer: connect exported JSON to the service route without removing labels, legends, hints, or aria-describedby links.',
+        notes ? `Local review notes: ${notes}` : 'Local review notes: add the team-specific owner, deadline, and fallback contact before handoff.'
+      ]
+    },
+    {
+      heading: 'Review evidence',
+      items: [
+        'Keyboard-only completion from first field to final action.',
+        'Screen-reader check for grouped choices, required errors, and complex-field hint text.',
+        'Evidence that non-digital, phone, or adviser-assisted routes are available where the form collects important documents.'
+      ]
+    }
+  ];
+
+  return {
+    title,
+    readiness,
+    sections,
+    markdown: formatLocalActionPackMarkdown(title, readiness, sections)
+  };
+}
+
 export function serializeSavedNotes(notes = {}) {
   const safeNotes = Object.fromEntries(
     Object.entries(notes)

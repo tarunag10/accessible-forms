@@ -1,5 +1,6 @@
 import {
   assessFormReadiness,
+  createLocalActionPack,
   createFormExport,
   createFormImplementationPack,
   createRemediationReport,
@@ -85,6 +86,7 @@ function renderForm(form) {
       <button type="button" class="secondary copy-spec" data-form-title="${escapeHtml(form.title)}">Copy spec</button>
       <button type="button" class="secondary copy-report" data-form-title="${escapeHtml(form.title)}">Copy remediation report</button>
       <button type="button" class="secondary copy-implementation-pack" data-form-title="${escapeHtml(form.title)}">Copy implementation pack</button>
+      <button type="button" class="secondary copy-local-action-pack" data-form-title="${escapeHtml(form.title)}">Copy local action pack</button>
       <button type="button" class="secondary download-spec" data-form-title="${escapeHtml(form.title)}">Download JSON</button>
     </div>
     <div class="review-notes">
@@ -206,8 +208,9 @@ mount.addEventListener('click', async (event) => {
   const copyButton = event.target.closest('.copy-spec');
   const reportButton = event.target.closest('.copy-report');
   const packButton = event.target.closest('.copy-implementation-pack');
+  const actionPackButton = event.target.closest('.copy-local-action-pack');
   const downloadButton = event.target.closest('.download-spec');
-  const button = copyButton || reportButton || packButton || downloadButton;
+  const button = copyButton || reportButton || packButton || actionPackButton || downloadButton;
   if (!button) return;
 
   const form = findForm(button.dataset.formTitle);
@@ -223,6 +226,9 @@ mount.addEventListener('click', async (event) => {
   } else if (packButton) {
     await copyText(createFormImplementationPack(form).markdown);
     packButton.textContent = 'Copied';
+  } else if (actionPackButton) {
+    await copyText(createLocalActionPack(form, savedNotes[form.title]).markdown);
+    actionPackButton.textContent = 'Copied';
   } else {
     downloadJson(exported.filename, exported.json);
   }

@@ -2,6 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {
   assessFormReadiness,
+  createLocalActionPack,
   createFormImplementationPack,
   createFormExport,
   currentGuidance,
@@ -159,6 +160,34 @@ test('creates form implementation packs with spec, remediation, and QA checks', 
   assert.match(pack.markdown, /Current source notes/);
   assert.match(pack.markdown, /```json/);
   assert.match(pack.markdown, /"schemaVersion": "open-access-uk.form.v1"/);
+});
+
+test('creates local action packs from form readiness and review notes', () => {
+  const form = {
+    title: 'Local repair callback',
+    description: 'A callback route for urgent housing repairs.',
+    topic: 'housing',
+    complexity: 'standard',
+    fields: [
+      { id: 'repair', label: 'Repair needed', type: 'textarea', required: true },
+      { id: 'contact', label: 'Safe contact method', type: 'radio', required: true, error: 'Choose a safe contact method.' }
+    ]
+  };
+  const pack = createLocalActionPack(form, 'Confirm emergency phone route and translation support.');
+
+  assert.equal(pack.title, 'Local repair callback local action pack');
+  assert.equal(pack.readiness.status, 'Needs review');
+  assert.deepEqual(pack.sections.map((section) => section.heading), [
+    'Before publishing',
+    'Local handoff',
+    'Review evidence'
+  ]);
+  assert.ok(pack.sections[0].items.some((item) => item.includes('Add clear error text')));
+  assert.ok(pack.sections[1].items.some((item) => item.includes('Confirm emergency phone route')));
+  assert.match(pack.markdown, /^# Local repair callback local action pack/m);
+  assert.match(pack.markdown, /Generated locally in the browser/);
+  assert.match(pack.markdown, /Service owner/);
+  assert.match(pack.markdown, /Keyboard-only completion/);
 });
 
 test('exposes current form accessibility guidance sources', () => {

@@ -27,9 +27,10 @@ The repository also includes:
 - `filterForms(forms, { topic, complexity })`: filters static form specs by public-service topic and complexity
 - demo filters for topic and complexity, with per-form readiness issues shown in expandable details
 - `createFormExport(form)`: returns a reusable JSON form schema, safe filename, and formatted JSON string
+- `createLocalActionPack(form, reviewNotes)`: turns readiness issues and local notes into a copyable next-step pack for service owners, reviewers, and developers
 - `safeFormFilename(title)`: creates download-safe `.json` filenames from form titles
 - `serializeSavedNotes(notes)` and `parseSavedNotes(value)`: localStorage-safe review note helpers
-- per-form `Copy spec`, `Download JSON`, and local review note controls in the static demo
+- per-form `Copy spec`, `Copy local action pack`, `Download JSON`, and local review note controls in the static demo
 
 ## Demo
 
