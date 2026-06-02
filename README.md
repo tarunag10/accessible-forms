@@ -12,7 +12,7 @@ Accessible GOV.UK-style public-service form examples for civic and advice workfl
 
 Each example is static and browser-only. The demo renders realistic labels, hints, required-field error text, fieldsets, legends, and local-only preview buttons without sending data anywhere.
 
-## Validation helper
+## Validation and review tools
 
 `src/forms.js` exports `validateFormSpec(spec)`, which checks for:
 
@@ -21,14 +21,11 @@ Each example is static and browser-only. The demo renders realistic labels, hint
 - missing hints on complex fields such as uploads, dates, telephone numbers, addresses, and textareas
 - missing fieldset and legend text for grouped radio or checkbox controls
 
-The first feature slice also adds:
+The repository also includes:
 
 - `assessFormReadiness(form)`: returns a percentage score, pass/review checklist, status, and issues for each form
 - `filterForms(forms, { topic, complexity })`: filters static form specs by public-service topic and complexity
 - demo filters for topic and complexity, with per-form readiness issues shown in expandable details
-
-The second feature slice adds:
-
 - `createFormExport(form)`: returns a reusable JSON form schema, safe filename, and formatted JSON string
 - `safeFormFilename(title)`: creates download-safe `.json` filenames from form titles
 - `serializeSavedNotes(notes)` and `parseSavedNotes(value)`: localStorage-safe review note helpers
