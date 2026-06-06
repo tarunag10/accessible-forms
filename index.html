@@ -7,9 +7,14 @@
   <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-  <header class="topbar">
+  <a class="skip-link" href="#tool">Skip to content</a>
+  <header class="site-header">
     <a class="brand" href="index.html">Open Access UK</a>
-    <nav aria-label="Primary"><a href="#tool">Tool</a><a href="#guidance">Guidance</a><a href="#contribute">Contribute</a></nav>
+    <button class="nav-toggle" type="button" aria-expanded="false" aria-controls="primary-nav">
+      Menu
+    </button>
+    <nav id="primary-nav" aria-label="Primary"><a href="#tool">Tool</a><a href="#guidance">Guidance</a><a href="#contribute">Contribute</a></nav>
+    <button id="theme-toggle" class="theme-toggle" type="button" aria-pressed="false">Dark theme</button>
   </header>
   <main>
     <section class="hero">
@@ -45,6 +50,14 @@
     </section>
     <section id="tool" class="form-list" aria-live="polite"><div id="form-filters" class="panel" aria-label="Form filters"></div><div id="forms"></div></section><section id="guidance" class="footer-band"><h2>Form principles</h2><p>Use visible labels, clear errors, one question per field, keyboard-friendly controls, and no forced account creation. Complex fields need format hints, and grouped controls need fieldsets with legends.</p><h2>Current public guidance</h2><div id="current-guidance" class="cards" aria-label="Current public guidance sources"></div></section>
   </main>
+  <footer class="site-footer">
+    <nav aria-label="Footer">
+      <a href="index.html">Open Access UK</a>
+      <a href="#tool">Tool</a>
+      <a href="LICENSE">MIT License</a>
+    </nav>
+    <p>Open-source, privacy-first, and local to your browser.</p>
+  </footer>
   <script type="module" src="src/app.js"></script>
 </body>
 </html>
