@@ -237,6 +237,24 @@ mount.addEventListener('click', async (event) => {
 
 initTheme('#theme-toggle');
 
+const linterMount = document.querySelector('#linter');
+
+function renderLinter() {
+  if (!linterMount) return;
+  const topic = document.querySelector('#topic-filter')?.value || 'all';
+  const complexity = document.querySelector('#complexity-filter')?.value || 'all';
+  const filtered = filterForms(exampleForms, { topic, complexity });
+  const rows = filtered.map((form) => {
+    const readiness = assessFormReadiness(form);
+    const issues = readiness.issues.length ? readiness.issues.join('; ') : 'No blocking accessibility issues found.';
+    return `<li><strong>${escapeHtml(form.title)} — ${readiness.score}%:</strong> ${escapeHtml(issues)}</li>`;
+  });
+  linterMount.innerHTML = `<h2>Accessibility linter</h2><ul>${rows.join('')}</ul>`;
+}
+
+renderLinter();
+filtersMount.addEventListener('change', renderLinter);
+
 const navToggle = document.querySelector('.nav-toggle');
 const primaryNav = document.querySelector('#primary-nav');
 navToggle?.addEventListener('click', () => {
